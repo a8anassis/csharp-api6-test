@@ -1,4 +1,4 @@
-﻿namespace UsersStudentsMVCApp.Data
+﻿namespace SchoolApp.Data
 {
     public abstract class BaseEntity
     {

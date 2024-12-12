@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using SchoolApp.Core.Enums;
-using SchoolApp.Models;
+﻿using SchoolApp.Core.Enums;
 
 namespace SchoolApp.DTO
 {
@@ -14,5 +11,7 @@ namespace SchoolApp.DTO
         public string? Firstname { get; set; }
         public string? Lastname { get; set; }
         public UserRole? UserRole { get; set; }
+        public DateTime InsertedAt { get; set; }
+        public DateTime ModifiedAt { get; set; }
     }
 }

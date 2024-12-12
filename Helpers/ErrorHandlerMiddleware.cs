@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
-using UsersStudentsAPIApp.Services.Exceptions;
+using SchoolApp.Exceptions;
 
 namespace UsersStudentsAPIApp.Helpers
 {
@@ -27,14 +27,11 @@ namespace UsersStudentsAPIApp.Helpers
                 response.StatusCode = exception switch
                 {
                     InvalidRegistrationException or 
-                    InvalidRoleException or
-                    UserAlreadyExistsException or
-                    TeacherAlreadyExistsException or
-                    StudentAlreadyExistsException => (int) HttpStatusCode.BadRequest,   // 400
+                    EntityAlreadyExistsException => (int) HttpStatusCode.BadRequest,   // 400
 
-                    UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,    // 401
-                    ForbiddenException => (int) HttpStatusCode.Forbidden,               // 403
-                    UserNotFoundException => (int) HttpStatusCode.NotFound,             // 404
+                    EntityNotAuthorizedException => (int)HttpStatusCode.Unauthorized,    // 401
+                    EntityForbiddenException => (int) HttpStatusCode.Forbidden,               // 403
+                    EntityNotFoundException => (int) HttpStatusCode.NotFound,             // 404
                     _ => (int) HttpStatusCode.InternalServerError
                 };
 

@@ -11,7 +11,8 @@ namespace SchoolApp.Services
         Task<User?> GetUserByUsernameAsync(string username);
         Task<List<User>> GetAllUsersFiltered(int pageNumber, int pageSize,
             UserFiltersDTO userFiltersDTO);
-        string CreateUserToken(int userId, string? username, string? email, UserRole? userRole,
-            string? appSecurityKey);
+        //string CreateUserToken(int userId, string username, string email, UserRole userRole,
+        //    string appSecurityKey);
+        Task<User?> GetUserByIdAsync(int id);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using SchoolApp.Models;
+using SchoolApp.Core.Enums;
+
 
 namespace SchoolApp.DTO
 {

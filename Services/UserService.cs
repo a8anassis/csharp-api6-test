@@ -5,6 +5,7 @@ using SchoolApp.Core.Enums;
 using SchoolApp.Core.Filters;
 using SchoolApp.Data;
 using SchoolApp.DTO;
+using SchoolApp.Exceptions;
 using SchoolApp.Repositories;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
@@ -74,6 +75,21 @@ namespace SchoolApp.Services
             return user;
         }
 
+        public async Task<User?> GetUserByIdAsync(int id)
+        {
+            User? user = null;
+
+            try
+            {
+                user = await _unitOfWork.UserRepository.GetAsync(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("{Message}{Excpetion}", e.Message, e.StackTrace);
+            }
+            return user;
+        }
+
         public async Task<User?> VerifyAndGetUserAsync(UserLoginDTO credentials)
         {
             User? user;
@@ -91,27 +107,70 @@ namespace SchoolApp.Services
             return user;
         }
 
-        public string CreateUserToken(int userId, string? username, string? email, UserRole? userRole,
-            string? appSecurityKey)
+        public async Task UpdateUserAsync(int userId, UserDTO userDTO)
+        {         
+            try
+            { 
+                var userToUpdate = _mapper!.Map<User>(userDTO);
+
+                await _unitOfWork.UserRepository.UpdateAsync(userToUpdate);
+                await _unitOfWork.SaveAsync();
+                _logger!.LogInformation("{Message}", "User: " + userDTO.Username + " updated successfully");
+            }
+            catch (Exception e)
+            {
+                _logger!.LogError("{Message}{Exception}", e.Message, e.StackTrace);
+                throw;
+            }
+            
+        }
+
+        public async Task DeleteUserAsync(int id)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey!));
+            bool deleted;
+            try
+            {
+               
+                deleted = await _unitOfWork!.UserRepository.DeleteAsync(id);
+                
+                if (!deleted)
+                {
+                    throw new EntityNotFoundException("User", "User Not Deleted");
+                }
+
+                await _unitOfWork.SaveAsync();
+                _logger!.LogInformation("{Message}", "User with id: " + id + " deleted successfully");
+
+            }
+            catch (Exception e)
+            {
+                _logger!.LogError("{Message}{Exception}", e.Message, e.StackTrace);
+                throw;
+            }
+        }
+
+        public string CreateUserToken(int userId, string username, string email, UserRole? userRole,
+            string appSecurityKey)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey));
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claimsInfo = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, username!),
+                new Claim(ClaimTypes.Name, username),
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email!),
+                new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, userRole.ToString()!)
             };
 
-            var jwtSecurityToken = new JwtSecurityToken(null, null, claimsInfo, DateTime.UtcNow,
+            var jwtSecurityToken = new JwtSecurityToken("https://codingfactory.aueb.gr", "https://api.codingfactory.aueb.gr", claimsInfo, DateTime.UtcNow,
                 DateTime.UtcNow.AddHours(3), signingCredentials);
+            //var jwtSecurityToken = new JwtSecurityToken(null, null, claimsInfo, DateTime.UtcNow,
+            //    DateTime.UtcNow.AddHours(3), signingCredentials);
 
             // Serialize the token
             var userToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
 
-            //return "Bearer " + userToken;
             return userToken;
         }
     }

@@ -53,9 +53,10 @@ namespace SchoolApp.Services
             return usersTeachers;
         }
 
-        public async Task<User?> GetTeacherByUsernameAsync(string username)
+        public async Task<UserTeacherReadOnlyDTO?> GetTeacherByUsernameAsync(string username)
         {
-            return await _unitOfWork.TeacherRepository.GetUserTeacherByUsernameAsync(username);
+            User? user = await _unitOfWork.TeacherRepository.GetUserTeacherByUsernameAsync(username);
+            return _mapper.Map<UserTeacherReadOnlyDTO>(user);
         }
 
         public async Task<int> GetTeacherCountAsync()
@@ -63,7 +64,7 @@ namespace SchoolApp.Services
             return await _unitOfWork.TeacherRepository.GetCountAsync();
         }
 
-        public async Task SignUpUserAsync(TeacherSignupDTO request)
+        public async Task<UserReadOnlyDTO> SignUpUserAsync(TeacherSignupDTO request)
         {
             Teacher teacher;
             User user;
@@ -85,18 +86,21 @@ namespace SchoolApp.Services
 
                 //teacher = ExtractTeacher(request);
                 teacher = _mapper.Map<Teacher>(request);
-                if (await _unitOfWork.TeacherRepository.GetByPhoneNumberAsync(teacher.PhoneNumber) is not null)
-                {
-                    throw new EntityAlreadyExistsException("Teacher", "Teacher with phone number " +
-                        teacher.PhoneNumber + " already exists");
-                }
+
+                // Controller to validate
+                //if (await _unitOfWork.TeacherRepository.GetByPhoneNumberAsync(teacher.PhoneNumber) is not null)
+                //{
+                //    throw new EntityAlreadyExistsException("Teacher", "Teacher with phone number " +
+                //        teacher.PhoneNumber + " already exists");
+                //}
 
                 await _unitOfWork.TeacherRepository.AddAsync(teacher);
                 user.Teacher = teacher;
                 // teacher.User = user; EF manages the other-end of the relationship since both entities are attached
 
                 await _unitOfWork.SaveAsync();
-                _logger.LogInformation("{Message}", "Teacher: " + teacher + " signed up successfully.");        // ToDo toString in Teacher
+                _logger.LogInformation("{Message}", "Teacher: " + teacher + " signed up successfully.");
+                return _mapper.Map<UserReadOnlyDTO>(user); ;
             }
             catch (Exception ex)
             {
@@ -105,26 +109,26 @@ namespace SchoolApp.Services
             }
         }
 
-        private User ExtractUser(TeacherSignupDTO signupDTO)
-        {
-            return new User()
-            {
-                Username = signupDTO.Username!,
-                Password = signupDTO.Password!,
-                Email = signupDTO.Email!,
-                Firstname = signupDTO.Firstname!,
-                Lastname = signupDTO.Lastname!,
-                UserRole = signupDTO.UserRole
-            };
-        }
+        //private User ExtractUser(TeacherSignupDTO signupDTO)
+        //{
+        //    return new User()
+        //    {
+        //        Username = signupDTO.Username!,
+        //        Password = signupDTO.Password!,
+        //        Email = signupDTO.Email!,
+        //        Firstname = signupDTO.Firstname!,
+        //        Lastname = signupDTO.Lastname!,
+        //        UserRole = signupDTO.UserRole
+        //    };
+        //}
 
-        private Teacher ExtractTeacher(TeacherSignupDTO signupDTO)
-        {
-            return new Teacher()
-            {
-                PhoneNumber = signupDTO.PhoneNumber!,
-                Institution = signupDTO.Institution!
-            };
-        }
+        //private Teacher ExtractTeacher(TeacherSignupDTO signupDTO)
+        //{
+        //    return new Teacher()
+        //    {
+        //        PhoneNumber = signupDTO.PhoneNumber!,
+        //        Institution = signupDTO.Institution!
+        //    };
+        //}
     }
 }
